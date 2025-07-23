@@ -28,6 +28,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    console.error('Transfer API error:', error);
     return NextResponse.json({ error: 'Failed to process transfer' }, { status: 500 });
   }
 }
