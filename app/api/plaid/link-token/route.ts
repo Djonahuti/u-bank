@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { plaidClient } from '@/lib/plaid';
+import { CountryCode, Products } from 'plaid';
 
 export async function POST(request: Request) {
   const { userId } = await request.json();
@@ -8,8 +9,8 @@ export async function POST(request: Request) {
     const response = await plaidClient.linkTokenCreate({
       user: { client_user_id: userId },
       client_name: 'U-Bank',
-      products: ['auth', 'transactions', 'identity'],
-      country_codes: ['US', 'CA', 'GB'],
+      products: [Products.Auth, Products.Transactions, Products.Identity],
+      country_codes: [CountryCode.Us, CountryCode.Ca, CountryCode.Gb],
       language: 'en',
     });
 
