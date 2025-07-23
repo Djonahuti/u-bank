@@ -1,0 +1,61 @@
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Customers table
+CREATE TABLE public.customers (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id),
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  address TEXT NOT NULL,
+  city TEXT NOT NULL,
+  state TEXT NOT NULL,
+  zip_code TEXT NOT NULL,
+  date_of_birth DATE NOT NULL,
+  nin TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Banks table
+CREATE TABLE public.banks (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  customer_id UUID REFERENCES customers(id),
+  plaid_access_token TEXT NOT NULL,
+  account_id TEXT NOT NULL,
+  account_name TEXT NOT NULL,
+  balance JSONB NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Transactions table
+CREATE TABLE public.transactions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  customer_id UUID REFERENCES customers(id),
+  bank_id UUID REFERENCES banks(id),
+  amount DECIMAL(10,2) NOT NULL,
+  transaction_type TEXT NOT NULL,
+  description TEXT,
+  status TEXT NOT NULL,
+  dwolla_transaction_id TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Enable RLS
+ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE banks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+CREATE POLICY "Users can view own customers data" ON customers
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own customers data" ON customers
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can view own banks data" ON banks
+  FOR SELECT USING (auth.uid() = (SELECT user_id FROM customers WHERE id = banks.customer_id));
+CREATE POLICY "Users can insert own banks data" ON banks
+  FOR INSERT WITH CHECK (auth.uid() = (SELECT user_id FROM customers WHERE id = banks.customer_id));
+CREATE POLICY "Users can view own transactions" ON transactions
+  FOR SELECT USING (auth.uid() = (SELECT user_id FROM customers WHERE id = transactions.customer_id));
+CREATE POLICY "Users can insert own transactions" ON transactions
+  FOR INSERT WITH CHECK (auth.uid() = (SELECT user_id FROM customers WHERE id = transactions.customer_id));
