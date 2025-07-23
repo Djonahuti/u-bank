@@ -1,3 +1,4 @@
+// app/auth/sign-up/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -19,20 +20,23 @@ export default function SignUp() {
     email: '',
     password: '',
   });
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
       });
 
-      if (error) throw error;
+      if (authError) throw new Error(`Authentication error: ${authError.message}`);
 
-      await supabase.from('customers').insert({
-        user_id: data.user?.id,
+      if (!data.user) throw new Error('No user data returned from authentication');
+
+      const { error: dbError } = await supabase.from('customers').insert({
+        user_id: data.user.id,
         first_name: formData.firstName,
         last_name: formData.lastName,
         address: formData.address,
@@ -44,9 +48,12 @@ export default function SignUp() {
         email: formData.email,
       });
 
+      if (dbError) throw new Error(`Database error: ${dbError.message}`);
+
       router.push('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Sign up error:', error);
+      setError(error.message || 'An error occurred during sign-up');
     }
   };
 
@@ -56,6 +63,7 @@ export default function SignUp() {
         <CardTitle>Sign Up</CardTitle>
       </CardHeader>
       <CardContent>
+        {error && <p className="text-red-500 mb-4">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"

@@ -70,11 +70,19 @@ export default function Dashboard() {
     }
   };
 
+  const logout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/';
+  };
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+      <div className="flex justify-between items-center mb-4">
       <PlaidLink onSuccess={() => window.location.reload()} />
-      
+        <Button onClick={logout}>Logout</Button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
         <Card>
           <CardHeader>
