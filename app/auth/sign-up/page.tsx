@@ -50,7 +50,15 @@ export default function SignUp() {
 
       if (dbError) throw new Error(`Database error: ${dbError.message}`);
 
-      router.push('/dashboard');
+      // Check if user is verified
+      if (
+        data.user.email_confirmed_at ||
+        data.user.confirmed_at
+      ) {
+        router.push('/dashboard');
+      } else {
+        setError('Please check your email and verify your account before logging in.');
+      }
     } catch (error: any) {
       console.error('Sign up error:', error);
       setError(error.message || 'An error occurred during sign-up');
