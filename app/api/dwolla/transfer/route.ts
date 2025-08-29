@@ -1,14 +1,15 @@
+
 import { NextResponse } from 'next/server';
 import { dwollaClient } from '@/lib/dwolla';
 import { supabase } from '@/lib/supabase';
 
 export async function POST(request: Request) {
-  const { amount, bank_id, customer_id, description } = await request.json();
+  const { amount, funding_source_url, customer_id, description } = await request.json();
 
   try {
     const transferRequest = {
       _links: {
-        source: { href: `${process.env.NEXT_DWOLLA_BASE_URL}/funding-sources/${bank_id}` },
+        source: { href: funding_source_url },
         destination: { href: `${process.env.NEXT_DWOLLA_BASE_URL}/funding-sources/destination-id` },
       },
       amount: { currency: 'USD', value: amount },
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
 
     await supabase.from('transactions').insert({
       customer_id,
-      bank_id,
+      // Optionally, you can store the funding_source_url or bank_id if needed
       amount,
       transaction_type: 'transfer',
       description,

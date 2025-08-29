@@ -41,7 +41,7 @@ export default function Dashboard() {
     }
   }, [user]);
 
-  const handleTransfer = async (bankId: string) => {
+  const handleTransfer = async (fundingSourceUrl: string) => {
     try {
       const customer = await supabase
         .from('customers')
@@ -54,7 +54,7 @@ export default function Dashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: 100, // Example amount
-          bank_id: bankId,
+          funding_source_url: fundingSourceUrl,
           customer_id: customer.data?.id,
           description: 'Test transfer',
         }),
@@ -94,7 +94,7 @@ export default function Dashboard() {
                 <h3>{bank.account_name}</h3>
                 <p>Available: ${bank.balance.available}</p>
                 <p>Current: ${bank.balance.current}</p>
-                <Button onClick={() => handleTransfer(bank.id)}>Transfer</Button>
+                <Button onClick={() => handleTransfer(bank.funding_source_url)}>Transfer</Button>
               </div>
             ))}
           </CardContent>

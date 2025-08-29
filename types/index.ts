@@ -23,6 +23,7 @@ export interface Bank {
     current: number;
     iso_currency_code: string;
   };
+  funding_source_url: string;
 }
 
 export interface Transaction {
