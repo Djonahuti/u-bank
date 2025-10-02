@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { plaidClient } from '@/lib/plaid';
 import { supabase } from '@/lib/supabase';
 import { dwollaClient } from '@/lib/dwolla';
+import { ProcessorTokenCreateRequestProcessorEnum } from 'plaid';
 
 export async function POST(request: Request) {
   const { public_token, account_id, account_name, userId, bank_name } = await request.json();
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     const processorRes = await plaidClient.processorTokenCreate({
       access_token,
       account_id,
-      processor: 'dwolla' as any,
+      processor: ProcessorTokenCreateRequestProcessorEnum.Dwolla,
     });
     const processor_token = processorRes.data.processor_token;
 
@@ -122,15 +123,16 @@ export async function POST(request: Request) {
       if (bankError) throw bankError;
 
       // 8. Optionally, revalidate path (if using Next.js revalidatePath)
-      // @ts-ignore
+      // @ts-expect-error - revalidatePath is not available in API routes
       if (typeof revalidatePath === 'function') revalidatePath('/dashboard');
 
       return NextResponse.json({ success: true, fundingSourceUrl });
     } else {
       return NextResponse.json({ error: 'Funding source creation failed' }, { status: 500 });
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Plaid/Dwolla API error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to process request' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to process request';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

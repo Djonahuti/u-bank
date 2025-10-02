@@ -59,9 +59,10 @@ export default function SignUp() {
       } else {
         setError('Please check your email and verify your account before logging in.');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Sign up error:', error);
-      setError(error.message || 'An error occurred during sign-up');
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred during sign-up';
+      setError(errorMessage);
     }
   };
 

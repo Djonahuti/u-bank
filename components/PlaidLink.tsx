@@ -3,7 +3,6 @@
 import { usePlaidLink } from 'react-plaid-link';
 import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from './AuthProvider';
 
 interface PlaidLinkProps {
@@ -43,9 +42,10 @@ export function PlaidLink({ onSuccess }: PlaidLinkProps) {
 
         console.log('Link token received:', data.link_token);
         setToken(data.link_token);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching link token:', err);
-        setError(err.message || 'Failed to fetch Plaid link token');
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch Plaid link token';
+        setError(errorMessage);
       }
     };
 
@@ -56,7 +56,7 @@ export function PlaidLink({ onSuccess }: PlaidLinkProps) {
     }
   }, [user, loading]);
 
-  const { open, ready, error: plaidError } = usePlaidLink({
+  const { open, ready } = usePlaidLink({
     token,
     onSuccess: async (public_token, metadata) => {
       try {
@@ -80,15 +80,17 @@ export function PlaidLink({ onSuccess }: PlaidLinkProps) {
 
         console.log('Public token exchanged successfully');
         onSuccess();
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error exchanging public token:', err);
-        setError(err.message || 'Failed to exchange Plaid public token');
+        const errorMessage = err instanceof Error ? err.message : 'Failed to exchange Plaid public token';
+        setError(errorMessage);
       }
     },
     onExit: (err, metadata) => {
       if (err != null) {
         console.error('Plaid link exit error:', err, metadata);
-        setError('Plaid link exited unexpectedly: ' + (typeof err === 'object' && err !== null && 'message' in err ? (err as any).message : String(err)));
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        setError('Plaid link exited unexpectedly: ' + errorMessage);
       }
     },
   });
