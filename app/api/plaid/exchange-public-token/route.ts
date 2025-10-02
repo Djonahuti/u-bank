@@ -12,7 +12,6 @@ export async function POST(request: Request) {
     // 1. Exchange public token for access token and item ID
     const exchangeRes = await plaidClient.itemPublicTokenExchange({ public_token });
     const access_token = exchangeRes.data.access_token;
-    const item_id = exchangeRes.data.item_id;
 
     // 2. Get account info from Plaid
     const accountsRes = await plaidClient.accountsGet({ access_token });
@@ -29,7 +28,6 @@ export async function POST(request: Request) {
 
 
     // 4. Get customer_id from Supabase, or create in Dwolla and Supabase if not found
-    let customer_id: string;
     let dwolla_customer_id: string | null;
     let customerData;
     let customerError;
@@ -47,7 +45,7 @@ export async function POST(request: Request) {
       throw new Error('Customer profile not completed. Please complete your profile before linking a bank account.');
     }
 
-    customer_id = customerData.id;
+    const customer_id = customerData.id;
     dwolla_customer_id = customerData.dwolla_customer_id || null;
 
     // Validate state is a 2-letter US abbreviation
