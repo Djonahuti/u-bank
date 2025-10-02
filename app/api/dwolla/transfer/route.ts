@@ -10,9 +10,9 @@ export async function POST(request: Request) {
     const transferRequest = {
       _links: {
         source: { href: funding_source_url },
-        destination: { href: `${process.env.NEXT_DWOLLA_BASE_URL}/funding-sources/destination-id` },
+        destination: { href: process.env.NEXT_DWOLLA_DESTINATION_FUNDING_SOURCE_URL as string },
       },
-      amount: { currency: 'USD', value: amount },
+      amount: { currency: 'USD', value: String(amount) },
     };
 
     const transfer = await dwollaClient.post('transfers', transferRequest);
@@ -28,8 +28,10 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Transfer API error:', error);
-    return NextResponse.json({ error: 'Failed to process transfer' }, { status: 500 });
+  } catch (error: any) {
+    const message = error?.message || 'Failed to process transfer';
+    const details = error?.body || error;
+    console.error('Transfer API error:', details);
+    return NextResponse.json({ error: message, details }, { status: 500 });
   }
 }
